@@ -6,39 +6,63 @@
 */
 
 
-class EscapingTestShell extends Shell{
+class EscapingTestShell extends Shell {
+	
+	var $skipModels = array(
+		'CakeSession'
+	);
 	
 	var $whitelist = array(
+		// Extranet
 		'Client.slug',
 		'Campaign.slug',
 		'Agency.slug',
 		'Share.model',
 		'Client.title',
-		'Agency.title'
+		'Agency.title',
+		// Sky
+		'ActivityLogEntry.action',
+		'Resource.type'
+	);
+	
+	var $skipFieldNames = array(
+		'model',
+		'foreign_key'
 	);
 	
 	function infect_with_js() {
 		
 		$models = App::objects('model');
 		foreach($models as $model) {
+			
+			if(in_array($model,$this->skipModels)) {
+				$this->out('SKIPPING '.$model);
+				continue;
+			}
+			
 			$Model = ClassRegistry::init($model);
 			$schema = $Model->schema();
 			
 			$listRecords = $Model->find('list');
 			foreach($listRecords as $id => $displayField) {
+				
 				$Model->create();
 				$Model->id = $id;
 				foreach($schema as $fieldName => $fieldParams) {
 					
-					if(in_array($model.'.'.$fieldName, $this->whitelist)) {
+					if(
+						in_array($model.'.'.$fieldName, $this->whitelist)
+						|| in_array($fieldName, $this->skipFieldNames)
+					) {
 						$this->out("SKIPPING $model.$fieldName");
 						continue;
 					}
 					
 					if($fieldParams['type'] == 'string' || $fieldParams['type'] == 'text') {
-						if(!preg_match('/_id$/',$fieldName)) {
+						if(!preg_match('/_id$/',$fieldName) && $fieldName != $Model->primaryKey) {
 							$nastyValue = "<script>EscTest.chk('$model.$fieldName')</script>";
-							if(!$Model->saveField($fieldName, $nastyValue)) {
+							// TODO: this should or shouldn't go via validation?
+							if(!$Model->saveField($fieldName, $nastyValue, array('callbacks'=>false))) {
 								$this->out("ERROR saving $model Field: $fieldName VALUE: $nastyValue Record: $displayField");
 								$this->out(print_r($Model->validationErrors,true));
 							} else {
