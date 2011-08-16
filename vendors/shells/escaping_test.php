@@ -22,7 +22,11 @@ class EscapingTestShell extends Shell {
 		'Agency.title',
 		// Sky
 		'ActivityLogEntry.action',
-		'Resource.type'
+		'Resource.type',
+		'PermissionSection.name',
+		'PermissionSubsection.name',
+		'Permission.name',
+		'Ticket.hash'
 	);
 	
 	var $skipFieldNames = array(
