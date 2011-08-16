@@ -4,7 +4,7 @@
 var EscTest = {
 	chk: function(name) {
 		var warningText = 'Vulnerable field: '+name;
-		console.log(warningText);
+		throw (warningText);
 		document.write('<div style="width:100%;min-height:2em;background-color:red;color:white;padding:0.5em">'+warningText+'</div>');
 	}
 }
